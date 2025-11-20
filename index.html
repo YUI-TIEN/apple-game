@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,13 +10,36 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
+    <div id="introOverlay" class="message-overlay visible">
+        <div class="message-content">
+            <h2>Fruit Box</h2>
+            <p class="rules">
+                Draw loops around apples.<br>
+                Sum of numbers must be <strong>10</strong>.<br>
+                You have <strong>60 seconds</strong>.
+            </p>
+            <button id="startBtn" class="btn-primary">Start Game</button>
+        </div>
+    </div>
+
+    <div id="countdownOverlay" class="countdown-overlay hidden">
+        <span id="countdownValue">3</span>
+    </div>
+
     <div class="game-container">
         <header class="game-header">
             <div class="score-board">
                 <span class="label">APPLES</span>
                 <span class="value" id="scoreValue">0</span>
             </div>
+
+            <div class="timer-display">
+                <span class="label">TIME</span>
+                <span class="value" id="timerValue">60</span>
+            </div>
+
             <div class="controls">
                 <label class="toggle-switch">
                     <input type="checkbox" id="lightModeToggle">
@@ -25,13 +49,27 @@
                 <button id="resetBtn" class="btn-reset">Reset</button>
             </div>
         </header>
-        
+
         <main class="canvas-wrapper">
             <canvas id="gameCanvas"></canvas>
             <div id="messageOverlay" class="message-overlay hidden">
-                <div class="message-content">
-                    <h2 id="messageTitle">Game Over</h2>
-                    <p id="messageSubtitle">All apples collected!</p>
+                <div class="message-content result-card">
+                    <div id="newRecordBadge" class="new-record hidden">NEW RECORD!</div>
+                    <h2 id="messageTitle">Time's Up!</h2>
+
+                    <div class="score-summary">
+                        <div class="score-item">
+                            <span class="label">SCORE</span>
+                            <span class="value big" id="finalScore">0</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="label">BEST</span>
+                            <span class="value" id="bestScore">0</span>
+                        </div>
+                    </div>
+
+                    <p id="messageSubtitle" class="hidden">Final Score: 0</p>
+                    <!-- Kept hidden for compatibility or removed -->
                     <button id="playAgainBtn" class="btn-primary">Play Again</button>
                 </div>
             </div>
@@ -39,4 +77,5 @@
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>

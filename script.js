@@ -62,18 +62,37 @@ class Game {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.apples = [];
-        this.particles = []; // Particle system
+        this.particles = [];
         this.score = 0;
         this.isDrawing = false;
-        this.currentPath = []; // Array of {x, y}
+        this.currentPath = [];
         this.dpr = window.devicePixelRatio || 1;
+
+        // Game State
+        this.state = 'INTRO'; // INTRO, PLAYING, FINISHED
+        this.timeLeft = 60;
+        this.timerInterval = null;
 
         // UI Elements
         this.scoreEl = document.getElementById('scoreValue');
+        this.timerEl = document.getElementById('timerValue');
+        this.timerDisplay = document.querySelector('.timer-display');
         this.resetBtn = document.getElementById('resetBtn');
         this.lightModeToggle = document.getElementById('lightModeToggle');
+
+        this.introOverlay = document.getElementById('introOverlay');
         this.messageOverlay = document.getElementById('messageOverlay');
+        this.messageTitle = document.getElementById('messageTitle');
+        // this.messageSubtitle = document.getElementById('messageSubtitle'); // Removed/Unused
+
+        this.finalScoreEl = document.getElementById('finalScore');
+        this.bestScoreEl = document.getElementById('bestScore');
+        this.newRecordBadge = document.getElementById('newRecordBadge');
+
+        this.startBtn = document.getElementById('startBtn');
         this.playAgainBtn = document.getElementById('playAgainBtn');
+
+        this.highScore = parseInt(localStorage.getItem('fruitBoxHighScore')) || 0;
 
         this.init();
     }
@@ -83,8 +102,8 @@ class Game {
         window.addEventListener('resize', () => this.resize());
 
         this.bindEvents();
-        this.startNewGame();
-        this.loop();
+        // Don't start game immediately, wait for user
+        this.renderStatic();
     }
 
     resize() {
@@ -111,20 +130,107 @@ class Game {
         window.addEventListener('touchend', end);
 
         // UI Events
-        this.resetBtn.addEventListener('click', () => this.startNewGame());
-        this.playAgainBtn.addEventListener('click', () => this.startNewGame());
+        this.startBtn.addEventListener('click', () => this.startGame());
+        this.resetBtn.addEventListener('click', () => this.startGame()); // Reset now restarts
+        this.playAgainBtn.addEventListener('click', () => this.startGame());
         this.lightModeToggle.addEventListener('change', (e) => {
             document.body.classList.toggle('light-mode', e.target.checked);
         });
     }
 
-    startNewGame() {
-        this.score = 0;
-        this.updateScore(0);
-        this.apples = [];
-        this.generateApples();
-        this.messageOverlay.classList.remove('visible');
+    startGame() {
+        this.introOverlay.classList.remove('visible');
+        this.messageOverlay.classList.add('hidden'); // Ensure hidden
+        this.messageOverlay.classList.remove('visible'); // Just in case
+        this.startCountdown();
     }
+
+    startCountdown() {
+        this.state = 'COUNTDOWN';
+        this.score = 0;
+        this.timeLeft = 60;
+        this.updateScore(0);
+        this.updateTimerDisplay();
+        this.timerDisplay.classList.remove('low-time');
+
+        this.apples = [];
+        this.generateApples(); // Initial batch
+
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const countdownValue = document.getElementById('countdownValue');
+        countdownOverlay.classList.remove('hidden');
+
+        let count = 3;
+        countdownValue.textContent = count;
+
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownValue.textContent = count;
+                // Reset animation
+                countdownValue.style.animation = 'none';
+                countdownValue.offsetHeight; /* trigger reflow */
+                countdownValue.style.animation = null;
+            } else {
+                clearInterval(interval);
+                countdownOverlay.classList.add('hidden');
+                this.beginPlay();
+            }
+        }, 1000);
+    }
+
+    beginPlay() {
+        this.state = 'PLAYING';
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+        this.loop();
+    }
+
+    updateTimer() {
+        this.timeLeft--;
+        this.updateTimerDisplay();
+
+        if (this.timeLeft <= 10) {
+            this.timerDisplay.classList.add('low-time');
+        }
+
+        if (this.timeLeft <= 0) {
+            this.endGame();
+        }
+    }
+
+    updateTimerDisplay() {
+        this.timerEl.textContent = this.timeLeft;
+    }
+
+    endGame() {
+        this.state = 'FINISHED';
+        clearInterval(this.timerInterval);
+
+        // High Score Logic
+        const isNewRecord = this.score > this.highScore;
+        if (isNewRecord) {
+            this.highScore = this.score;
+            localStorage.setItem('fruitBoxHighScore', this.highScore);
+        }
+
+        // Update UI
+        this.finalScoreEl.textContent = this.score;
+        this.bestScoreEl.textContent = this.highScore;
+
+        if (isNewRecord && this.score > 0) {
+            this.newRecordBadge.classList.remove('hidden');
+        } else {
+            this.newRecordBadge.classList.add('hidden');
+        }
+
+        this.messageOverlay.classList.remove('hidden');
+        // Force reflow for transition if we had one, but we use display:none so it's instant
+        // If we want fade in, we need to handle display:flex vs opacity
+        // For now, just showing it is fine.
+        this.messageOverlay.classList.add('visible'); // If we want to use opacity transition later
+    }
+
 
     generateApples() {
         this.apples = [];
@@ -162,19 +268,21 @@ class Game {
     }
 
     handleInputStart(e) {
+        if (this.state !== 'PLAYING') return;
         const pos = this.getPos(e);
         this.isDrawing = true;
         this.currentPath = [pos];
     }
 
     handleInputMove(e) {
-        if (!this.isDrawing) return;
+        if (!this.isDrawing || this.state !== 'PLAYING') return;
         const pos = this.getPos(e);
         // Simple distance check to avoid too many points
         const last = this.currentPath[this.currentPath.length - 1];
         const dist = Math.hypot(pos.x - last.x, pos.y - last.y);
         if (dist > 5) {
             this.currentPath.push(pos);
+            this.checkRealTimeSelection(); // Highlighting
         }
     }
 
@@ -193,35 +301,36 @@ class Game {
         };
     }
 
+    checkRealTimeSelection() {
+        if (this.currentPath.length < 3) {
+            this.apples.forEach(a => a.selected = false);
+            return;
+        }
+
+        for (const apple of this.apples) {
+            if (apple.removed) continue;
+            apple.selected = this.isPointInPolygon(apple, this.currentPath);
+        }
+    }
+
     checkSelection() {
         if (this.currentPath.length < 3) return;
 
-        const selectedApples = [];
-
-        // 1. Identify selected apples using Ray Casting algorithm
-        for (const apple of this.apples) {
-            if (apple.removed) continue;
-            if (this.isPointInPolygon(apple, this.currentPath)) {
-                selectedApples.push(apple);
-            }
-        }
-
-        // 2. Calculate Sum
+        // Use the already calculated selection state
+        const selectedApples = this.apples.filter(a => a.selected && !a.removed);
         const sum = selectedApples.reduce((acc, apple) => acc + apple.value, 0);
 
-        // 3. Validate and Score
         if (sum === 10) {
-            // Success!
             selectedApples.forEach(apple => {
                 apple.removed = true;
-                // Optional: Spawn particles here
+                this.spawnParticles(apple.x, apple.y);
             });
             this.updateScore(selectedApples.length);
-            this.checkGameOver();
-        } else {
-            // Failure visual feedback could go here
-            // For now, just clearing the line is enough (simple)
+            this.checkRefill();
         }
+
+        // Clear selection state
+        this.apples.forEach(a => a.selected = false);
     }
 
     isPointInPolygon(point, vs) {
@@ -240,17 +349,71 @@ class Game {
         return inside;
     }
 
-    checkGameOver() {
-        const remainingApples = this.apples.filter(a => !a.removed).length;
-        if (remainingApples === 0) {
-            setTimeout(() => {
-                this.messageOverlay.classList.add('visible');
-            }, 500);
+    checkRefill() {
+        // Continuous Respawn: Maintain constant number of apples
+        const targetApples = 30;
+        const currentApples = this.apples.filter(a => !a.removed).length;
+        const needed = targetApples - currentApples;
+
+        if (needed > 0) {
+            this.spawnNewApples(needed);
+        }
+    }
+
+    spawnNewApples(count) {
+        const appleRadius = 25;
+        const buffer = 10;
+        let attempts = 0;
+        let added = 0;
+
+        while (added < count && attempts < 500) {
+            attempts++;
+            const x = Math.random() * (this.width - 2 * (appleRadius + buffer)) + (appleRadius + buffer);
+            const y = Math.random() * (this.height - 2 * (appleRadius + buffer)) + (appleRadius + buffer);
+
+            // Check collision with ALL existing apples (including removed ones if we don't cleanup)
+            // Actually we should filter out removed ones for collision check? 
+            // No, removed ones are gone visually, so we can overlap them.
+            // But we need to make sure we don't overlap with *visible* apples.
+
+            let overlapping = false;
+            for (const apple of this.apples) {
+                if (apple.removed) continue; // Ignore removed apples
+                const dx = apple.x - x;
+                const dy = apple.y - y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < (appleRadius * 2 + buffer)) {
+                    overlapping = true;
+                    break;
+                }
+            }
+
+            if (!overlapping) {
+                const value = Math.floor(Math.random() * 9) + 1;
+                const newApple = new Apple(x, y, value);
+                newApple.scale = 0; // Pop in effect
+                this.apples.push(newApple);
+                added++;
+            }
+        }
+
+        // Cleanup removed apples to keep array size manageable
+        // Only keep if particles need them? No, particles are separate.
+        // We can filter out removed apples periodically or now.
+        this.apples = this.apples.filter(a => !a.removed);
+    }
+
+    spawnParticles(x, y) {
+        const colors = ['#FFD700', '#FF6347', '#ADFF2F', '#87CEEB']; // Gold, Tomato, GreenYellow, SkyBlue
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < 10; i++) {
+            this.particles.push(new Particle(x, y, color));
         }
     }
 
     updateScore(points) {
-        this.score += points;
+        if (points === 0) this.score = 0; // Reset
+        else this.score += points;
         this.scoreEl.textContent = this.score;
     }
 
@@ -262,6 +425,8 @@ class Game {
 
     update() {
         this.apples.forEach(apple => apple.update());
+        this.particles.forEach(p => p.update());
+        this.particles = this.particles.filter(p => p.life > 0);
     }
 
     draw() {
@@ -272,6 +437,9 @@ class Game {
             if (apple.removed) return;
             this.drawApple(apple);
         });
+
+        // Draw Particles
+        this.particles.forEach(p => p.draw(this.ctx));
 
         // Draw Path
         if (this.currentPath.length > 1) {
@@ -293,18 +461,27 @@ class Game {
         this.ctx.translate(apple.x, apple.y);
         this.ctx.scale(apple.scale, apple.scale);
 
+        // Highlight Effect
+        if (apple.selected) {
+            this.ctx.shadowColor = 'white';
+            this.ctx.shadowBlur = 20;
+        }
+
         // Apple Body
         this.ctx.beginPath();
         this.ctx.arc(0, 0, apple.radius, 0, Math.PI * 2);
         this.ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent-color').trim();
         this.ctx.fill();
 
+        // Reset Shadow
+        this.ctx.shadowBlur = 0;
+
         // Number
         this.ctx.fillStyle = '#fff';
         this.ctx.font = 'bold 20px "Outfit", sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText(apple.value, 0, 2); // Slight offset for visual center
+        this.ctx.fillText(apple.value, 0, 2);
 
         this.ctx.restore();
     }
