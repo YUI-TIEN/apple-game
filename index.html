@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fruit Box</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <div class="score-board">
+                <span class="label">APPLES</span>
+                <span class="value" id="scoreValue">0</span>
+            </div>
+            <div class="controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="lightModeToggle">
+                    <span class="slider"></span>
+                    <span class="label-text">Light Colors</span>
+                </label>
+                <button id="resetBtn" class="btn-reset">Reset</button>
+            </div>
+        </header>
+        
+        <main class="canvas-wrapper">
+            <canvas id="gameCanvas"></canvas>
+            <div id="messageOverlay" class="message-overlay hidden">
+                <div class="message-content">
+                    <h2 id="messageTitle">Game Over</h2>
+                    <p id="messageSubtitle">All apples collected!</p>
+                    <button id="playAgainBtn" class="btn-primary">Play Again</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
