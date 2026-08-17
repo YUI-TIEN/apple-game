@@ -1,9 +1,12 @@
-const BREAD_VARIANTS = [
-  { shape: 'loaf', crust: '#a8622b', crumb: '#e8b978', dark: '#5e330f', accent: '#fbe4b3' },
-  { shape: 'roll', crust: '#9c5c26', crumb: '#e3af6f', dark: '#552e0e', accent: '#f9deac' },
-  { shape: 'baguette', crust: '#ab6c30', crumb: '#ecc084', dark: '#623510', accent: '#fce7b6' },
-  { shape: 'croissant', crust: '#bd7628', crumb: '#f0c579', dark: '#6e3a0f', accent: '#fcecb8' },
-  { shape: 'bagel', crust: '#8a4f22', crumb: '#d9a561', dark: '#4a260c', accent: '#f4d69f' },
+// Per-bread palettes tuned to how each product actually bakes:
+// toast stays pale with browned edges, croissants go glossy gold,
+// bagels darken to a deep chew, baguettes sit in mid wheat brown.
+export const BREAD_VARIANTS = [
+  { shape: 'loaf', crust: '#d69a52', crumb: '#f7e3bc', dark: '#a06a2e', accent: '#fdf3dd' },
+  { shape: 'roll', crust: '#c07c34', crumb: '#eec489', dark: '#7d4a17', accent: '#fae3b4' },
+  { shape: 'baguette', crust: '#b9762f', crumb: '#eec78d', dark: '#7a4413', accent: '#fbe6ba' },
+  { shape: 'croissant', crust: '#d99231', crumb: '#f8d68b', dark: '#955711', accent: '#fef0c4' },
+  { shape: 'bagel', crust: '#9c5b22', crumb: '#d8a45f', dark: '#5c3009', accent: '#eecc93' },
 ];
 
 const COFFEE_VARIANTS = [
