@@ -1,26 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fruit Box</title>
-    <link rel="stylesheet" href="style.css">
+    <title data-i18n="title">Apple Box</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div id="introOverlay" class="message-overlay visible">
-        <div class="message-content">
-            <h2>Fruit Box</h2>
-            <p class="rules">
-                Draw loops around apples.<br>
-                Sum of numbers must be <strong>10</strong>.<br>
-                You have <strong>60 seconds</strong>.
+    <div id="homeScreen" class="home-screen">
+        <div class="home-bg" aria-hidden="true"></div>
+
+        <div class="home-content">
+            <canvas id="heroCanvas" class="hero-canvas" aria-hidden="true"></canvas>
+
+            <h1 class="home-title" data-i18n="intro.heading">Apple Box</h1>
+            <p class="home-tagline">
+                <span data-i18n="intro.rulesLine1"></span>
+                <span data-i18n="intro.rulesLine2"></span>
             </p>
-            <button id="startBtn" class="btn-primary">Start Game</button>
+            <p class="home-timer-hint" data-i18n="intro.rulesLine3"></p>
+
+            <button id="startBtn" class="btn-primary btn-hero" data-i18n="intro.start">Start Game</button>
+
+            <details class="how-to-play">
+                <summary data-i18n="intro.howToPlay">How to Play</summary>
+                <ol>
+                    <li data-i18n="intro.step1"></li>
+                    <li data-i18n="intro.step2"></li>
+                    <li data-i18n="intro.step3"></li>
+                </ol>
+            </details>
+        </div>
+
+        <div class="lang-switcher home-lang">
+            <label for="langSelect" data-i18n="lang.label">Language</label>
+            <select id="langSelect"></select>
         </div>
     </div>
 
@@ -28,15 +46,15 @@
         <span id="countdownValue">3</span>
     </div>
 
-    <div class="game-container">
+    <div class="game-container hidden">
         <header class="game-header">
             <div class="score-board">
-                <span class="label">APPLES</span>
+                <span class="label" data-i18n="hud.score">APPLES</span>
                 <span class="value" id="scoreValue">0</span>
             </div>
 
             <div class="timer-display">
-                <span class="label">TIME</span>
+                <span class="label" data-i18n="hud.time">TIME</span>
                 <span class="value" id="timerValue">60</span>
             </div>
 
@@ -44,9 +62,9 @@
                 <label class="toggle-switch">
                     <input type="checkbox" id="lightModeToggle">
                     <span class="slider"></span>
-                    <span class="label-text">Light Colors</span>
+                    <span class="label-text" data-i18n="hud.lightMode">Light Mode</span>
                 </label>
-                <button id="resetBtn" class="btn-reset">Reset</button>
+                <button id="resetBtn" class="btn-reset" data-i18n="hud.reset">Reset</button>
             </div>
         </header>
 
@@ -54,28 +72,26 @@
             <canvas id="gameCanvas"></canvas>
             <div id="messageOverlay" class="message-overlay hidden">
                 <div class="message-content result-card">
-                    <div id="newRecordBadge" class="new-record hidden">NEW RECORD!</div>
-                    <h2 id="messageTitle">Time's Up!</h2>
+                    <div id="newRecordBadge" class="new-record hidden" data-i18n="result.newRecord">NEW RECORD!</div>
+                    <h2 id="messageTitle" data-i18n="result.timeUp">Time's Up!</h2>
 
                     <div class="score-summary">
                         <div class="score-item">
-                            <span class="label">SCORE</span>
+                            <span class="label" data-i18n="result.score">SCORE</span>
                             <span class="value big" id="finalScore">0</span>
                         </div>
                         <div class="score-item">
-                            <span class="label">BEST</span>
+                            <span class="label" data-i18n="result.best">BEST</span>
                             <span class="value" id="bestScore">0</span>
                         </div>
                     </div>
 
-                    <p id="messageSubtitle" class="hidden">Final Score: 0</p>
-                    <!-- Kept hidden for compatibility or removed -->
-                    <button id="playAgainBtn" class="btn-primary">Play Again</button>
+                    <button id="playAgainBtn" class="btn-primary" data-i18n="result.playAgain">Play Again</button>
                 </div>
             </div>
         </main>
     </div>
-    <script src="script.js"></script>
+    <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>
