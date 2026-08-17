@@ -1,20 +1,20 @@
-import { Apple } from './Apple.js';
+import { GameItem } from './GameItem.js';
 import { Particle, spawnBurst } from './Particle.js';
 import { Background } from './Background.js';
-import { drawApple } from './renderApple.js';
-import { HeroApples } from './HeroApples.js';
+import { drawItem } from './renderItem.js';
+import { HeroItems } from './HeroItems.js';
 import { i18n } from '../i18n/i18n.js';
 
-const APPLE_RADIUS = 26;
+const ITEM_RADIUS = 26;
 const BUFFER = 10;
-const TOTAL_APPLES = 30;
+const TOTAL_ITEMS = 30;
 const GAME_DURATION = 60;
 
 export class Game {
   constructor() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
-    this.apples = [];
+    this.items = [];
     this.particles = [];
     this.background = new Background();
     this.score = 0;
@@ -35,7 +35,7 @@ export class Game {
     this.homeScreen = document.getElementById('homeScreen');
     this.gameContainer = document.querySelector('.game-container');
     this.heroCanvas = document.getElementById('heroCanvas');
-    this.hero = new HeroApples(this.heroCanvas);
+    this.hero = new HeroItems(this.heroCanvas);
     this.messageOverlay = document.getElementById('messageOverlay');
     this.messageTitle = document.getElementById('messageTitle');
 
@@ -49,7 +49,7 @@ export class Game {
     this.countdownOverlay = document.getElementById('countdownOverlay');
     this.countdownValue = document.getElementById('countdownValue');
 
-    this.highScore = parseInt(localStorage.getItem('appleGameHighScore')) || 0;
+    this.highScore = parseInt(localStorage.getItem('bakeryGameHighScore')) || 0;
     this.comboCount = 0;
     this.floatingTexts = [];
 
@@ -128,10 +128,10 @@ export class Game {
     this.updateTimerDisplay();
     this.timerDisplay.classList.remove('low-time');
 
-    this.apples = [];
+    this.items = [];
     this.particles = [];
     this.floatingTexts = [];
-    this.generateApples();
+    this.generateItems();
 
     this.countdownOverlay.classList.remove('hidden');
 
@@ -188,7 +188,7 @@ export class Game {
     const isNewRecord = this.score > this.highScore;
     if (isNewRecord) {
       this.highScore = this.score;
-      localStorage.setItem('appleGameHighScore', this.highScore);
+      localStorage.setItem('bakeryGameHighScore', this.highScore);
     }
 
     this.messageTitle.textContent = i18n.t('result.timeUp');
@@ -205,28 +205,28 @@ export class Game {
     this.messageOverlay.classList.add('visible');
   }
 
-  generateApples() {
-    this.apples = [];
+  generateItems() {
+    this.items = [];
     let attempts = 0;
-    while (this.apples.length < TOTAL_APPLES && attempts < 1000) {
+    while (this.items.length < TOTAL_ITEMS && attempts < 1000) {
       attempts++;
-      const apple = this.tryPlaceApple();
-      if (apple) this.apples.push(apple);
+      const item = this.tryPlaceItem();
+      if (item) this.items.push(item);
     }
   }
 
-  tryPlaceApple() {
-    const x = Math.random() * (this.width - 2 * (APPLE_RADIUS + BUFFER)) + (APPLE_RADIUS + BUFFER);
-    const y = Math.random() * (this.height - 2 * (APPLE_RADIUS + BUFFER)) + (APPLE_RADIUS + BUFFER);
+  tryPlaceItem() {
+    const x = Math.random() * (this.width - 2 * (ITEM_RADIUS + BUFFER)) + (ITEM_RADIUS + BUFFER);
+    const y = Math.random() * (this.height - 2 * (ITEM_RADIUS + BUFFER)) + (ITEM_RADIUS + BUFFER);
 
-    for (const apple of this.apples) {
-      if (apple.removed) continue;
-      const dist = Math.hypot(apple.x - x, apple.y - y);
-      if (dist < APPLE_RADIUS * 2 + BUFFER) return null;
+    for (const item of this.items) {
+      if (item.removed) continue;
+      const dist = Math.hypot(item.x - x, item.y - y);
+      if (dist < ITEM_RADIUS * 2 + BUFFER) return null;
     }
 
     const value = Math.floor(Math.random() * 9) + 1;
-    return new Apple(x, y, value);
+    return new GameItem(x, y, value);
   }
 
   handleInputStart(e) {
@@ -261,44 +261,44 @@ export class Game {
 
   checkRealTimeSelection() {
     if (this.currentPath.length < 3) {
-      this.apples.forEach((a) => (a.selected = false));
+      this.items.forEach((it) => (it.selected = false));
       return;
     }
-    for (const apple of this.apples) {
-      if (apple.removed) continue;
-      apple.selected = this.isPointInPolygon(apple, this.currentPath);
+    for (const item of this.items) {
+      if (item.removed) continue;
+      item.selected = this.isPointInPolygon(item, this.currentPath);
     }
   }
 
   checkSelection() {
     if (this.currentPath.length < 3) return;
 
-    const selectedApples = this.apples.filter((a) => a.selected && !a.removed);
-    const sum = selectedApples.reduce((acc, apple) => acc + apple.value, 0);
+    const selectedItems = this.items.filter((it) => it.selected && !it.removed);
+    const sum = selectedItems.reduce((acc, item) => acc + item.value, 0);
 
-    if (sum === 10 && selectedApples.length > 0) {
-      selectedApples.forEach((apple) => {
-        apple.startPop();
-        spawnParticlesFor(this.particles, apple);
+    if (sum === 10 && selectedItems.length > 0) {
+      selectedItems.forEach((item) => {
+        item.startPop();
+        spawnParticlesFor(this.particles, item);
       });
       this.comboCount++;
-      this.spawnFloatingScore(selectedApples);
-      this.updateScore(selectedApples.length);
+      this.spawnFloatingScore(selectedItems);
+      this.updateScore(selectedItems.length);
       setTimeout(() => this.checkRefill(), 260);
     } else {
       this.comboCount = 0;
     }
 
-    this.apples.forEach((a) => (a.selected = false));
+    this.items.forEach((it) => (it.selected = false));
   }
 
-  spawnFloatingScore(selectedApples) {
-    const cx = selectedApples.reduce((s, a) => s + a.x, 0) / selectedApples.length;
-    const cy = selectedApples.reduce((s, a) => s + a.y, 0) / selectedApples.length;
+  spawnFloatingScore(selectedItems) {
+    const cx = selectedItems.reduce((s, it) => s + it.x, 0) / selectedItems.length;
+    const cy = selectedItems.reduce((s, it) => s + it.y, 0) / selectedItems.length;
     this.floatingTexts.push({
       x: cx,
       y: cy,
-      text: `+${selectedApples.length}`,
+      text: `+${selectedItems.length}`,
       life: 1,
       vy: -0.8,
     });
@@ -320,20 +320,20 @@ export class Game {
   }
 
   checkRefill() {
-    this.apples = this.apples.filter((a) => !a.removed);
-    const needed = TOTAL_APPLES - this.apples.length;
-    if (needed > 0) this.spawnNewApples(needed);
+    this.items = this.items.filter((it) => !it.removed);
+    const needed = TOTAL_ITEMS - this.items.length;
+    if (needed > 0) this.spawnNewItems(needed);
   }
 
-  spawnNewApples(count) {
+  spawnNewItems(count) {
     let attempts = 0;
     let added = 0;
     while (added < count && attempts < 500) {
       attempts++;
-      const apple = this.tryPlaceApple();
-      if (apple) {
-        apple.scale = 0;
-        this.apples.push(apple);
+      const item = this.tryPlaceItem();
+      if (item) {
+        item.scale = 0;
+        this.items.push(item);
         added++;
       }
     }
@@ -353,7 +353,7 @@ export class Game {
   }
 
   update() {
-    this.apples.forEach((apple) => apple.update());
+    this.items.forEach((item) => item.update());
     this.particles.forEach((p) => p.update());
     this.particles = this.particles.filter((p) => p.life > 0);
     this.floatingTexts.forEach((t) => {
@@ -372,9 +372,9 @@ export class Game {
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.background.draw(this.ctx, this.width, this.height, isLight);
 
-    this.apples.forEach((apple) => {
-      if (apple.removed) return;
-      drawApple(this.ctx, apple);
+    this.items.forEach((item) => {
+      if (item.removed) return;
+      drawItem(this.ctx, item);
     });
 
     this.particles.forEach((p) => p.draw(this.ctx));
@@ -415,7 +415,9 @@ export class Game {
   }
 }
 
-function spawnParticlesFor(particles, apple) {
-  const colors = [apple.palette.base, apple.palette.highlight, apple.palette.mid, '#FFD700'];
-  spawnBurst(particles, apple.x, apple.y, colors);
+function spawnParticlesFor(particles, item) {
+  const colors = item.type === 'bread'
+    ? [item.variant.crust, item.variant.accent, item.variant.crumb, '#FFD700']
+    : [item.variant.base, item.variant.sheen, item.variant.mid, '#FFD700'];
+  spawnBurst(particles, item.x, item.y, colors);
 }

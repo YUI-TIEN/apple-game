@@ -1,6 +1,6 @@
 import { LOCALES, DEFAULT_LOCALE } from './locales.js';
 
-const STORAGE_KEY = 'appleGameLocale';
+const STORAGE_KEY = 'bakeryGameLocale';
 
 function detectBrowserLocale() {
   const lang = (navigator.language || '').toLowerCase();
