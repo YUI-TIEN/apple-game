@@ -1,7 +1,40 @@
-export const LOCALES = {
+import { ROOMS_STRINGS } from './rooms.js';
+
+const BASE = {
   zh: {
     name: '中文',
     title: '烘焙坊消消樂',
+    mode: {
+      heading: '烘焙坊消消樂',
+      subtitle: '選一個玩法開始',
+      lastPlayed: '上次玩的',
+      hostLink: '我是主持人，我要開房 →',
+      back: '← 回到模式選擇',
+      solo: {
+        title: '單人挑戰',
+        desc: '60 秒衝最高分，紀錄只留在這台裝置',
+      },
+      multi: {
+        title: '團體戰',
+        desc: '輸入房號加入，和其他隊伍比分數',
+      },
+    },
+    join: {
+      heading: '加入房間',
+      subtitle: '跟主持人拿房號，取一個隊名就能開打。',
+      roomLabel: '房號',
+      roomHint: '4 碼英數字，不會有 0 O 1 I L',
+      teamLabel: '隊名',
+      submit: '加入房間',
+      errors: {
+        roomRequired: '請先輸入房號',
+        roomConfusable: '房號不會用到 0、O、1、I、L，請再跟主持人確認一次',
+        roomFormat: '房號是 4 碼英數字，請再確認一次',
+        teamRequired: '請輸入隊名',
+        teamTooLong: '隊名最多 20 個字',
+        unavailable: '多人房間還在建置中，先玩單人挑戰吧',
+      },
+    },
     intro: {
       heading: '烘焙坊消消樂',
       rulesLine1: '圈選麵包與咖啡豆連成一圈，',
@@ -37,6 +70,37 @@ export const LOCALES = {
   en: {
     name: 'English',
     title: 'Bakery Box',
+    mode: {
+      heading: 'Bakery Box',
+      subtitle: 'Pick how you want to play',
+      lastPlayed: 'Last played',
+      hostLink: "I'm the host — open a room →",
+      back: '← Back to mode select',
+      solo: {
+        title: 'Solo Run',
+        desc: '60 seconds for your best score, kept on this device',
+      },
+      multi: {
+        title: 'Team Battle',
+        desc: 'Join with a room code and go up against other teams',
+      },
+    },
+    join: {
+      heading: 'Join a room',
+      subtitle: 'Grab the room code from your host, pick a team name, and play.',
+      roomLabel: 'Room code',
+      roomHint: '4 characters — never 0, O, 1, I or L',
+      teamLabel: 'Team name',
+      submit: 'Join room',
+      errors: {
+        roomRequired: 'Enter the room code first',
+        roomConfusable: 'Room codes never use 0, O, 1, I or L — double-check with your host',
+        roomFormat: 'A room code is 4 letters or digits — please check again',
+        teamRequired: 'Enter a team name',
+        teamTooLong: 'Team names are 20 characters max',
+        unavailable: 'Team rooms are still being built — try a solo run for now',
+      },
+    },
     intro: {
       heading: 'Bakery Box',
       rulesLine1: 'Draw a loop around breads and coffee beans.',
@@ -72,6 +136,37 @@ export const LOCALES = {
   ja: {
     name: '日本語',
     title: 'ベーカリーボックス',
+    mode: {
+      heading: 'ベーカリーボックス',
+      subtitle: '遊び方を選んでください',
+      lastPlayed: '前回プレイ',
+      hostLink: '司会です — ルームを開く →',
+      back: '← モード選択に戻る',
+      solo: {
+        title: 'ひとりで挑戦',
+        desc: '60秒でハイスコアを狙う。記録はこの端末に保存',
+      },
+      multi: {
+        title: 'チーム戦',
+        desc: 'ルーム番号で参加して、他のチームとスコアを競う',
+      },
+    },
+    join: {
+      heading: 'ルームに参加',
+      subtitle: '司会からルーム番号をもらって、チーム名を決めれば準備完了。',
+      roomLabel: 'ルーム番号',
+      roomHint: '英数字4桁。0 O 1 I L は使いません',
+      teamLabel: 'チーム名',
+      submit: '参加する',
+      errors: {
+        roomRequired: 'ルーム番号を入力してください',
+        roomConfusable: 'ルーム番号に 0・O・1・I・L は使いません。司会に確認してください',
+        roomFormat: 'ルーム番号は英数字4桁です。もう一度確認してください',
+        teamRequired: 'チーム名を入力してください',
+        teamTooLong: 'チーム名は20文字までです',
+        unavailable: 'チーム戦は準備中です。まずはひとりで挑戦してみてください',
+      },
+    },
     intro: {
       heading: 'ベーカリーボックス',
       rulesLine1: 'パンとコーヒー豆を囲むように線を描こう。',
@@ -105,5 +200,11 @@ export const LOCALES = {
     },
   },
 };
+
+// The room screens ship their own copy so the multiplayer work could land
+// without every locale change colliding in this file.
+export const LOCALES = Object.fromEntries(
+  Object.entries(BASE).map(([code, dict]) => [code, { ...dict, ...(ROOMS_STRINGS[code] || {}) }]),
+);
 
 export const DEFAULT_LOCALE = 'zh';
