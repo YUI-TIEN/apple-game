@@ -2,7 +2,6 @@ import { GameItem } from './GameItem.js';
 import { Particle, spawnBurst } from './Particle.js';
 import { Background } from './Background.js';
 import { drawItem } from './renderItem.js';
-import { HeroItems } from './HeroItems.js';
 import { i18n } from '../i18n/i18n.js';
 
 const ITEM_RADIUS = 26;
@@ -22,9 +21,12 @@ export class Game {
     this.currentPath = [];
     this.dpr = window.devicePixelRatio || 1;
 
-    this.state = 'INTRO';
+    this.state = 'IDLE';
     this.timeLeft = GAME_DURATION;
     this.timerInterval = null;
+    this.countdownInterval = null;
+    this.attached = false;
+    this.endHandler = null;
 
     this.scoreEl = document.getElementById('scoreValue');
     this.timerEl = document.getElementById('timerValue');
@@ -32,10 +34,6 @@ export class Game {
     this.resetBtn = document.getElementById('resetBtn');
     this.lightModeToggle = document.getElementById('lightModeToggle');
 
-    this.homeScreen = document.getElementById('homeScreen');
-    this.gameContainer = document.querySelector('.game-container');
-    this.heroCanvas = document.getElementById('heroCanvas');
-    this.hero = new HeroItems(this.heroCanvas);
     this.messageOverlay = document.getElementById('messageOverlay');
     this.messageTitle = document.getElementById('messageTitle');
 
@@ -43,8 +41,10 @@ export class Game {
     this.bestScoreEl = document.getElementById('bestScore');
     this.newRecordBadge = document.getElementById('newRecordBadge');
 
-    this.startBtn = document.getElementById('startBtn');
     this.playAgainBtn = document.getElementById('playAgainBtn');
+    this.resultBackBtn = document.getElementById('resultBackBtn');
+    this.resultExtra = document.getElementById('resultExtra');
+    this.mode = 'solo';
 
     this.countdownOverlay = document.getElementById('countdownOverlay');
     this.countdownValue = document.getElementById('countdownValue');
@@ -57,29 +57,58 @@ export class Game {
   }
 
   init() {
-    this.resize();
     window.addEventListener('resize', () => this.resize());
     this.bindEvents();
-    this.startBackgroundLoop();
   }
 
-  startBackgroundLoop() {
-    const tick = () => {
-      if (this.state === 'INTRO') {
-        this.hero.update();
-        this.hero.draw();
-      } else {
-        this.background.update();
-        if (this.state === 'FINISHED') this.draw();
-      }
-      requestAnimationFrame(tick);
-    };
-    tick();
+  // Screen lifecycle. Nothing renders or ticks while the game screen is off,
+  // so leaving mid-countdown or mid-round cannot resurrect a stale round.
+  enter() {
+    if (this.attached) return;
+    this.attached = true;
+    this.resize();
+    this.renderLoop();
+  }
+
+  leave() {
+    this.attached = false;
+    this.clearTimers();
+    this.countdownOverlay.classList.add('hidden');
+    this.state = 'IDLE';
+  }
+
+  clearTimers() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.countdownInterval) clearInterval(this.countdownInterval);
+    this.timerInterval = null;
+    this.countdownInterval = null;
+  }
+
+  onEnd(fn) {
+    this.endHandler = fn;
+  }
+
+  // 'solo' keeps replay controls; 'team' is a single scored run whose result
+  // card is owned by the room flow (one score per team, first one counts).
+  setMode(mode) {
+    this.mode = mode;
+    const isTeam = mode === 'team';
+    this.resetBtn.classList.toggle('hidden', isTeam);
+    this.playAgainBtn.classList.toggle('hidden', isTeam);
+    this.resultBackBtn.classList.toggle('hidden', isTeam);
+  }
+
+  renderLoop() {
+    if (!this.attached) return;
+    requestAnimationFrame(() => this.renderLoop());
+    if (this.state === 'IDLE') return;
+    if (this.state === 'PLAYING') this.update();
+    this.background.update();
+    this.draw();
   }
 
   resize() {
-    this.hero.resize();
-    if (this.gameContainer.classList.contains('hidden')) return;
+    if (!this.attached) return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
     this.canvas.width = rect.width * this.dpr;
     this.canvas.height = rect.height * this.dpr;
@@ -102,17 +131,14 @@ export class Game {
     this.canvas.addEventListener('touchmove', (e) => { e.preventDefault(); move(e.touches[0]); }, { passive: false });
     window.addEventListener('touchend', end);
 
-    this.startBtn.addEventListener('click', () => this.startGame());
-    this.resetBtn.addEventListener('click', () => this.startGame());
-    this.playAgainBtn.addEventListener('click', () => this.startGame());
+    this.resetBtn.addEventListener('click', () => this.start());
+    this.playAgainBtn.addEventListener('click', () => this.start());
     this.lightModeToggle.addEventListener('change', (e) => {
       document.body.classList.toggle('light-mode', e.target.checked);
     });
   }
 
-  startGame() {
-    this.homeScreen.classList.add('hidden');
-    this.gameContainer.classList.remove('hidden');
+  start() {
     this.messageOverlay.classList.add('hidden');
     this.messageOverlay.classList.remove('visible');
     this.resize();
@@ -120,6 +146,7 @@ export class Game {
   }
 
   startCountdown() {
+    this.clearTimers();
     this.state = 'COUNTDOWN';
     this.score = 0;
     this.comboCount = 0;
@@ -138,12 +165,13 @@ export class Game {
     let count = 3;
     this.renderCountdown(count);
 
-    const interval = setInterval(() => {
+    this.countdownInterval = setInterval(() => {
       count--;
       if (count > 0) {
         this.renderCountdown(count);
       } else {
-        clearInterval(interval);
+        clearInterval(this.countdownInterval);
+        this.countdownInterval = null;
         this.countdownOverlay.classList.add('hidden');
         this.beginPlay();
       }
@@ -161,7 +189,6 @@ export class Game {
     this.state = 'PLAYING';
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => this.updateTimer(), 1000);
-    this.loop();
   }
 
   updateTimer() {
@@ -183,7 +210,10 @@ export class Game {
 
   endGame() {
     this.state = 'FINISHED';
-    clearInterval(this.timerInterval);
+    this.clearTimers();
+    this.isDrawing = false;
+    this.currentPath = [];
+    this.items.forEach((it) => (it.selected = false));
 
     const isNewRecord = this.score > this.highScore;
     if (isNewRecord) {
@@ -203,6 +233,8 @@ export class Game {
 
     this.messageOverlay.classList.remove('hidden');
     this.messageOverlay.classList.add('visible');
+
+    this.endHandler?.(this.score);
   }
 
   generateItems() {
@@ -250,7 +282,13 @@ export class Game {
   handleInputEnd() {
     if (!this.isDrawing) return;
     this.isDrawing = false;
-    this.checkSelection();
+
+    // A loop released after the buzzer must not score: the round is already
+    // over and the final score has been recorded (and, in a team room, may
+    // already have been submitted).
+    if (this.state === 'PLAYING') this.checkSelection();
+    else this.items.forEach((it) => (it.selected = false));
+
     this.currentPath = [];
   }
 
@@ -345,13 +383,6 @@ export class Game {
     this.scoreEl.textContent = this.score;
   }
 
-  loop() {
-    if (this.state !== 'PLAYING') return;
-    this.update();
-    this.draw();
-    requestAnimationFrame(() => this.loop());
-  }
-
   update() {
     this.items.forEach((item) => item.update());
     this.particles.forEach((p) => p.update());
@@ -361,10 +392,6 @@ export class Game {
       t.life -= 0.02;
     });
     this.floatingTexts = this.floatingTexts.filter((t) => t.life > 0);
-  }
-
-  renderStatic() {
-    this.draw();
   }
 
   draw() {

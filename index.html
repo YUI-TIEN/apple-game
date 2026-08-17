@@ -11,8 +11,39 @@
 </head>
 
 <body>
-    <div id="homeScreen" class="home-screen">
+    <!-- Mode select ------------------------------------------------------ -->
+    <div id="modeScreen" class="mode-screen hidden">
         <div class="home-bg" aria-hidden="true"></div>
+
+        <div class="mode-content">
+            <h1 class="home-title" data-i18n="mode.heading">Bakery Box</h1>
+            <p class="mode-subtitle" data-i18n="mode.subtitle"></p>
+
+            <div class="mode-cards">
+                <button class="mode-card" id="modeSoloBtn" type="button">
+                    <span class="mode-card-badge hidden" data-i18n="mode.lastPlayed"></span>
+                    <span class="mode-card-icon" aria-hidden="true">🍞</span>
+                    <span class="mode-card-title" data-i18n="mode.solo.title"></span>
+                    <span class="mode-card-desc" data-i18n="mode.solo.desc"></span>
+                </button>
+
+                <button class="mode-card" id="modeMultiBtn" type="button">
+                    <span class="mode-card-badge hidden" data-i18n="mode.lastPlayed"></span>
+                    <span class="mode-card-icon" aria-hidden="true">☕</span>
+                    <span class="mode-card-title" data-i18n="mode.multi.title"></span>
+                    <span class="mode-card-desc" data-i18n="mode.multi.desc"></span>
+                </button>
+            </div>
+
+            <button class="mode-host-link" id="modeHostBtn" type="button" data-i18n="mode.hostLink"></button>
+        </div>
+    </div>
+
+    <!-- Solo intro ------------------------------------------------------- -->
+    <div id="homeScreen" class="home-screen hidden">
+        <div class="home-bg" aria-hidden="true"></div>
+
+        <button class="screen-back" data-back data-i18n="mode.back"></button>
 
         <div class="home-content">
             <canvas id="heroCanvas" class="hero-canvas" aria-hidden="true"></canvas>
@@ -35,17 +66,19 @@
                 </ol>
             </details>
         </div>
-
-        <div class="lang-switcher home-lang">
-            <label for="langSelect" data-i18n="lang.label">Language</label>
-            <select id="langSelect"></select>
-        </div>
     </div>
 
+    <div class="lang-switcher global-lang" id="globalLang">
+        <label for="langSelect" data-i18n="lang.label">Language</label>
+        <select id="langSelect" class="lang-select"></select>
+    </div>
+
+    <!-- Countdown -------------------------------------------------------- -->
     <div id="countdownOverlay" class="countdown-overlay hidden">
         <span id="countdownValue">3</span>
     </div>
 
+    <!-- Game ------------------------------------------------------------- -->
     <div class="game-container hidden">
         <header class="game-header">
             <div class="score-board">
@@ -86,11 +119,15 @@
                         </div>
                     </div>
 
+                    <div id="resultExtra" class="result-extra"></div>
+
                     <button id="playAgainBtn" class="btn-primary" data-i18n="result.playAgain">Play Again</button>
+                    <button id="resultBackBtn" class="btn-ghost" data-back data-i18n="mode.back"></button>
                 </div>
             </div>
         </main>
     </div>
+
     <script type="module" src="/src/main.js"></script>
 </body>
 

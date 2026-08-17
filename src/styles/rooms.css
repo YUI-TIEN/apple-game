@@ -1,0 +1,381 @@
+/* ==========================================================================
+   Room flow (#3) — /join reuses .join-screen / .join-card / .room-input /
+   .result-extra from main.css. This file covers what those don't already
+   provide: the host dashboard, the projector board, and the upload / lock
+   confirmation widgets shared across screens.
+   ========================================================================== */
+
+/* Join form ---------------------------------------------------------- */
+
+/* The form is the layout owner for its fields: without this the .field
+   blocks collapse against each other and the submit button shrinks to its
+   text instead of filling the card (buttons don't stretch from display:flex
+   alone). */
+#rmForm {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#rmForm .btn-primary {
+    width: 100%;
+}
+
+.host-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 6vh 24px 5vh;
+}
+
+.host-card {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 32px 28px;
+    border-radius: 24px;
+    border: 1px solid var(--ui-border);
+    background: var(--ui-bg);
+    box-shadow: var(--shadow);
+    text-align: left;
+    animation: heroIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Room code panel ---------------------------------------------------- */
+
+.rm-room-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 20px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--canvas-bg) 60%, transparent);
+    border: 1px solid var(--ui-border);
+    text-align: center;
+}
+
+.rm-room-panel-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+.rm-room-code {
+    font-size: clamp(2.8rem, 11vw, 5rem);
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    color: var(--accent-color);
+    text-shadow: 0 4px 24px color-mix(in srgb, var(--accent-color) 35%, transparent);
+    font-variant-numeric: tabular-nums;
+}
+
+.rm-room-panel-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.rm-locked-badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent-color) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 45%, transparent);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* Leaderboard --------------------------------------------------------- */
+
+.rm-leaderboard-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rm-leaderboard-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rm-teams-count {
+    font-weight: 700;
+    opacity: 0.75;
+}
+
+.rm-empty-state {
+    padding: 34px 16px;
+    text-align: center;
+    border-radius: 16px;
+    border: 1px dashed var(--ui-border);
+    opacity: 0.55;
+    font-size: 0.95rem;
+}
+
+.rm-table-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--ui-border);
+}
+
+.rm-leaderboard {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 420px;
+}
+
+.rm-leaderboard th,
+.rm-leaderboard td {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.rm-leaderboard thead th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.55;
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.rm-leaderboard tbody tr:nth-child(odd) {
+    background: color-mix(in srgb, var(--canvas-bg) 40%, transparent);
+}
+
+.rm-leaderboard td.rm-rank {
+    font-weight: 800;
+    opacity: 0.6;
+    width: 2.4em;
+}
+
+.rm-leaderboard td.rm-score {
+    font-weight: 800;
+    color: var(--accent-color);
+}
+
+/* Lock confirmation ----------------------------------------------------
+   Custom in-page dialog — native window.confirm() is intentionally avoided
+   so automated UI checks can drive it like any other element. */
+
+.rm-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    padding: 20px;
+}
+
+.rm-confirm-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--bg-color);
+    border-radius: 20px;
+    padding: 28px 24px;
+    border: 1px solid var(--ui-border);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    animation: cardIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.rm-confirm-card h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.rm-confirm-card p {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    opacity: 0.75;
+}
+
+.rm-confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.rm-confirm-actions .btn-primary,
+.rm-confirm-actions .btn-ghost {
+    flex: 1;
+}
+
+/* Score / upload widgets (join.js — both the post-game result card and the
+   "resume an unsent score" card use these) ----------------------------- */
+
+.rm-score-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 18px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--canvas-bg) 60%, transparent);
+    border: 1px solid var(--ui-border);
+}
+
+.rm-score-label {
+    font-size: 0.8rem;
+    opacity: 0.55;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+
+.rm-score-value {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--accent-color);
+}
+
+.rm-upload-note {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--secondary-color) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--secondary-color) 35%, transparent);
+}
+
+.rm-upload-locked,
+.rm-upload-taken {
+    background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent);
+}
+
+/* ==========================================================================
+   Projector board (/board) — read-only, no controls, sized for a room.
+   ========================================================================== */
+
+.board-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 4vh 4vw;
+    background: var(--bg-gradient);
+}
+
+.board-inner {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(20px, 4vh, 48px);
+}
+
+.board-room-code {
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    opacity: 0.45;
+}
+
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.board-row td {
+    padding: clamp(10px, 1.8vh, 24px) clamp(14px, 2vw, 32px);
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.board-rank {
+    width: 1.6em;
+    font-size: clamp(1.6rem, 3vw, 3.2rem);
+    font-weight: 900;
+    opacity: 0.5;
+    font-variant-numeric: tabular-nums;
+}
+
+.board-team {
+    font-size: clamp(1.6rem, 3.4vw, 3.4rem);
+    font-weight: 800;
+    word-break: break-word;
+}
+
+.board-score {
+    text-align: right;
+    font-size: clamp(1.8rem, 3.8vw, 3.8rem);
+    font-weight: 900;
+    color: var(--accent-color);
+    font-variant-numeric: tabular-nums;
+}
+
+.board-row-rank1 .board-rank,
+.board-row-rank1 .board-score {
+    color: #FFD700;
+}
+
+.board-row-rank2 .board-rank,
+.board-row-rank2 .board-score {
+    color: #C9D3DC;
+}
+
+.board-row-rank3 .board-rank,
+.board-row-rank3 .board-score {
+    color: #E3A15B;
+}
+
+.board-empty {
+    font-size: clamp(1.3rem, 2.6vw, 2.2rem);
+    opacity: 0.5;
+    text-align: center;
+}
+
+@media (min-width: 1600px) {
+    .board-inner {
+        max-width: 1800px;
+    }
+}
+
+@media (max-width: 560px) {
+    .host-card {
+        padding: 24px 18px;
+        gap: 16px;
+    }
+
+    .rm-room-code {
+        letter-spacing: 0.1em;
+    }
+
+    .rm-leaderboard-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .host-card,
+    .rm-confirm-card {
+        animation: none;
+    }
+}
